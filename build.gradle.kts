@@ -5,18 +5,17 @@
  */
 
 plugins {
-    `java-library`
-    `maven-publish`
+    java
+    application
+    id("com.github.spotbugs") version "6.0.26" // Подключение SpotBugs
 }
 
 repositories {
-    mavenLocal()
-    maven {
-        url = uri("https://repo.maven.apache.org/maven2/")
-    }
+    mavenCentral()
 }
 
 dependencies {
+    implementation("org.apache.commons:commons-lang3:3.12.0")
     testImplementation(libs.org.junit.jupiter.junit.jupiter.engine)
     testImplementation(libs.org.junit.vintage.junit.vintage.engine)
     testImplementation(libs.org.assertj.assertj.core)
@@ -25,12 +24,23 @@ dependencies {
 group = "ru.job4j"
 version = "1.0"
 description = "elementary"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_21
 
-publishing {
-    publications.create<MavenPublication>("maven") {
-        from(components["java"])
+tasks.spotbugsMain {
+    reports.create("html") {
+        required = true
+        outputLocation.set(layout.buildDirectory.file("reports/spotbugs/spotbugs.html"))
     }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+tasks.test {
+    finalizedBy(tasks.spotbugsMain)
 }
 
 tasks.withType<JavaCompile>() {
