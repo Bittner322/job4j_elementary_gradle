@@ -61,3 +61,26 @@ tasks.register<Zip>("zipJavaDoc") {
     archiveFileName.set("javadoc.zip") // Имя создаваемого архива
     destinationDirectory.set(layout.buildDirectory.dir("archives")) // Директория, куда будет сохранен архив
 }
+
+tasks.register("checkJarSize") {
+    group = "verification"
+    description = "Checks the size of the generated JAR file."
+
+    val jarFileProvider = tasks.named<Jar>("jar").flatMap { it.archiveFile }
+    dependsOn("jar")
+
+    doLast {
+        val jarFile = jarFileProvider.get().asFile
+        val sizeInMB = jarFile.length().toDouble() / (1024.0 * 1024.0)
+
+        if (!jarFile.exists()) {
+            throw GradleException("JAR file not found: ${jarFile.absolutePath}")
+        }
+
+        if (sizeInMB > 5.0) {
+            logger.warn("JAR file exceeds 5 MB. Current size: ${"%.2f".format(sizeInMB)} MB")
+        } else {
+            logger.lifecycle("JAR file is within limit. Current size: ${"%.2f".format(sizeInMB)} MB")
+        }
+    }
+}
